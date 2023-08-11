@@ -20,7 +20,6 @@ var navTree *widget.Tree
 var searchBar *widget.Entry
 var credentials map[string]string
 var isMobile bool
-var resultsPerPage int
 
 var ingredients []string
 var categories []string
@@ -33,7 +32,19 @@ var currentCount int
 var currentQuery map[string]string
 var currentPage int
 
+type Config struct {
+	maximumImageSizePx   uint
+	resultsPerPage       int
+	desktopDefaultWidth  float32
+	desktopDefaultHeight float32
+}
+
+var config Config
+
 func main() {
+
+	// Load config
+	setConfig()
 
 	// General visual settings
 	mainApp = app.NewWithID("MealTimeApp")
@@ -42,10 +53,8 @@ func main() {
 	mainApp.SetIcon(icon)
 
 	mainWindow = mainApp.NewWindow("MealTime")
-	mainWindow.Resize(fyne.NewSize(1500, 800))
+	mainWindow.Resize(fyne.NewSize(config.desktopDefaultWidth, config.desktopDefaultHeight))
 	mainWindow.CenterOnScreen()
-
-	resultsPerPage = 10
 
 	// Determine device
 	device := fyne.CurrentDevice()
@@ -79,9 +88,9 @@ func displayInitialPage() {
 	} else {
 		currentQuery = map[string]string{"type": "query", "fieldName": "", "fieldValue": ""}
 
-		currentRecipes, currentCount = getRecipes("", "", 0, resultsPerPage)
+		currentRecipes, currentCount = getRecipes("", "", 0, config.resultsPerPage)
 
-		allPages := int(math.Ceil(float64(currentCount) / float64(resultsPerPage)))
+		allPages := int(math.Ceil(float64(currentCount) / float64(config.resultsPerPage)))
 
 		currentPage = 1
 		displayResults(allPages, "All recipes")

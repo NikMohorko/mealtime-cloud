@@ -48,9 +48,9 @@ func initializeNavigation() {
 		currentQuery["type"] = "text"
 		currentQuery["searchTerm"] = searchTerm
 
-		currentRecipes, currentCount = getRecipesByText(currentQuery["searchTerm"], 0, resultsPerPage)
+		currentRecipes, currentCount = getRecipesByText(currentQuery["searchTerm"], 0, config.resultsPerPage)
 
-		allPages := int(math.Ceil(float64(currentCount) / float64(resultsPerPage)))
+		allPages := int(math.Ceil(float64(currentCount) / float64(config.resultsPerPage)))
 
 		currentPage = 1
 		displayResults(allPages, searchTerm)
@@ -113,9 +113,9 @@ func createNavigationTree(categ []string, ingr []string, countr []string) *widge
 
 		currentQuery["type"] = "query"
 
-		currentRecipes, currentCount = getRecipes(currentQuery["fieldName"], currentQuery["fieldValue"], 0, resultsPerPage)
+		currentRecipes, currentCount = getRecipes(currentQuery["fieldName"], currentQuery["fieldValue"], 0, config.resultsPerPage)
 
-		allPages := int(math.Ceil(float64(currentCount) / float64(resultsPerPage)))
+		allPages := int(math.Ceil(float64(currentCount) / float64(config.resultsPerPage)))
 		currentPage = 1
 		displayResults(allPages, id)
 	}
@@ -181,10 +181,10 @@ func displayResults(allPages int, searchTerm string) {
 
 				// Check if this was a normal query or text search
 				if currentQuery["type"] == "query" {
-					currentRecipes, currentCount = getRecipes(currentQuery["fieldName"], currentQuery["fieldValue"], resultsPerPage*(i.Col), resultsPerPage)
+					currentRecipes, currentCount = getRecipes(currentQuery["fieldName"], currentQuery["fieldValue"], config.resultsPerPage*(i.Col), config.resultsPerPage)
 
 				} else {
-					currentRecipes, currentCount = getRecipesByText(currentQuery["searchTerm"], resultsPerPage*(i.Col), resultsPerPage)
+					currentRecipes, currentCount = getRecipesByText(currentQuery["searchTerm"], config.resultsPerPage*(i.Col), config.resultsPerPage)
 				}
 
 				currentPage = i.Col + 1
@@ -297,7 +297,7 @@ func recipeEntry(recipe Recipe, mode string) {
 
 	recipeImage := []byte{}
 
-	allPages := int(math.Ceil(float64(currentCount) / float64(resultsPerPage)))
+	allPages := int(math.Ceil(float64(currentCount) / float64(config.resultsPerPage)))
 	backButton := widget.NewButtonWithIcon("Back", theme.NavigateBackIcon(), func() { displayResults(allPages, currentQuery["fieldValue"]) })
 
 	// Entry fields
@@ -392,7 +392,7 @@ func recipeEntry(recipe Recipe, mode string) {
 		}
 
 		if addUpdateOperation == true {
-			allPages := int(math.Ceil(float64(currentCount) / float64(resultsPerPage)))
+			allPages := int(math.Ceil(float64(currentCount) / float64(config.resultsPerPage)))
 			displayResults(allPages, currentQuery["fieldValue"])
 		}
 
@@ -460,13 +460,13 @@ func recipeEntry(recipe Recipe, mode string) {
 			height := bounds.Dy()
 
 			// Check if image is too large and resize if necessary
-			if width > 300 || height > 300 {
+			if width > int(config.maximumImageSizePx) || height > int(config.maximumImageSizePx) {
 
 				if width > height {
-					chosenImage = resize.Resize(300, 0, chosenImage, resize.Lanczos3)
+					chosenImage = resize.Resize(config.maximumImageSizePx, 0, chosenImage, resize.Lanczos3)
 
 				} else {
-					chosenImage = resize.Resize(0, 300, chosenImage, resize.Lanczos3)
+					chosenImage = resize.Resize(0, config.maximumImageSizePx, chosenImage, resize.Lanczos3)
 				}
 			}
 
