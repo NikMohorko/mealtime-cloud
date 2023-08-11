@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"image"
 	"image/color"
-	"io/ioutil"
 	"math"
 	"strconv"
 	"strings"
+
+	"image/jpeg"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -16,6 +19,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/nfnt/resize"
 	"golang.org/x/exp/slices"
 )
 
@@ -291,7 +295,7 @@ func displayRecipeDetails(id widget.ListItemID, allPages int, searchTerm string)
 // recipeEntry displays a page for adding a new recipe or editiing an existing one
 func recipeEntry(recipe Recipe, mode string) {
 
-	image := []byte{}
+	recipeImage := []byte{}
 
 	allPages := int(math.Ceil(float64(currentCount) / float64(resultsPerPage)))
 	backButton := widget.NewButtonWithIcon("Back", theme.NavigateBackIcon(), func() { displayResults(allPages, currentQuery["fieldValue"]) })
@@ -375,7 +379,7 @@ func recipeEntry(recipe Recipe, mode string) {
 			PrepTime:        prepTime,
 			DefaultPortions: DefaultPortions,
 			Ingredients:     ingredients,
-			Image:           image,
+			Image:           recipeImage,
 		}
 
 		var addUpdateOperation bool
@@ -438,19 +442,40 @@ func recipeEntry(recipe Recipe, mode string) {
 	// Add image functionality
 	addImage := func(f fyne.URIReadCloser, err error) {
 
+		// In case file dialog is cancelled or file cannot be accessed
 		if err != nil || f == nil {
 			return
 		}
 
-		data, err := ioutil.ReadAll(f)
+		chosenImage, _, err := image.Decode(f)
 
 		if err != nil {
 			errorDialog := dialog.NewError(err, mainWindow)
 			errorDialog.Show()
 
 		} else {
-			image = data
-			imageRes := fyne.NewStaticResource(f.URI().Name(), data)
+
+			bounds := chosenImage.Bounds()
+			width := bounds.Dx()
+			height := bounds.Dy()
+
+			// Check if image is too large and resize if necessary
+			if width > 300 || height > 300 {
+
+				if width > height {
+					chosenImage = resize.Resize(300, 0, chosenImage, resize.Lanczos3)
+
+				} else {
+					chosenImage = resize.Resize(0, 300, chosenImage, resize.Lanczos3)
+				}
+			}
+
+			// Encode as jpeg and save in recipeImage
+			imageBuffer := new(bytes.Buffer)
+			jpeg.Encode(imageBuffer, chosenImage, nil)
+			recipeImage = imageBuffer.Bytes()
+
+			imageRes := fyne.NewStaticResource(f.URI().Name(), recipeImage)
 			canvasImage := canvas.NewImageFromResource(imageRes)
 			canvasImage.FillMode = canvas.ImageFillContain
 			canvasImage.SetMinSize(fyne.NewSize(100, 100))

@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	fyne.io/fyne/v2 v2.3.5
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	golang.org/x/crypto v0.11.0
 	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
 )
